@@ -18,7 +18,7 @@ namespace StudentManagementApi.IntegrationTests.Helpers
     //Needed Microsoft.Powershell.SDK 6.2.4 -> 2020-02-16
     public class DockerSqlHelper
     {
-        private const string Password = "SA_PASSWORD=IntegrationTesting79";
+        private const string Password = "SA_PASSWORD=";
         private const string Image = "microsoft/mssql-server-windows-express";
         
         public IDbConnectionFactory DbConnectionFactory { get; }
