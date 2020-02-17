@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace StudentManagementApi.DataAccess
 {
-    public class StudentRepository : IStudentRepository
+    public class StudentRepositoryEF : IStudentRepository
     {
         private readonly StudentManagementDbContext _context;
 
-        public StudentRepository(StudentManagementDbContext context)
+        public StudentRepositoryEF(StudentManagementDbContext context)
         {
             _context = context ?? throw new ArgumentNullException(nameof(StudentManagementDbContext));
         }

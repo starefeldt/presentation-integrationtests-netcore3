@@ -8,6 +8,7 @@ using StudentManagementApi.ConfigureServices;
 using StudentManagementApi.DataAccess;
 using StudentManagementApi.Domain;
 using StudentManagementApi.Domain.Interfaces;
+using StudentManagementApi.Domain.Models;
 
 namespace StudentManagementApi
 {
@@ -25,8 +26,10 @@ namespace StudentManagementApi
         public void ConfigureServices(IServiceCollection services)
         {
             ConfigureServicesNotIntendedForIntegationTests(services);
+
             services.AddScoped<IStudentService, StudentService>();
-            services.AddScoped<IStudentRepository, StudentRepository>();
+            services.AddScoped<IStudentRepository, StudentRepositorySQL>();
+
             services.AddRabbitMQ(Configuration);
             services.AddControllers();
         }
@@ -37,12 +40,14 @@ namespace StudentManagementApi
             {
                 return;
             }
+            var connectionString = Configuration.GetConnectionString("StudentManagementDb");
 
             services.AddDbContext<StudentManagementDbContext>(options =>
             {
-                var connectionString = Configuration.GetConnectionString("StudentManagementDb");
                 options.UseSqlServer(connectionString, b => b.MigrationsAssembly("StudentManagementApi"));
             });
+
+            services.AddScoped<IDbConnectionFactory>(sp => new DbConnectionFactory(connectionString));
             services.AddSwagger();
         }
 

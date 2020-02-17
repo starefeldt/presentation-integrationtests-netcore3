@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StudentManagementApi.Domain
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StudentManagementApi.DataAccess", "StudentManagementApi.DataAccess\StudentManagementApi.DataAccess.csproj", "{88687208-3A7F-4859-B7B4-C9FFBACA1C3E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StudentManagementApi.IntegrationTests", "StudentManagementApi.IntegrationTests\StudentManagementApi.IntegrationTests.csproj", "{BCB22232-2DA8-4EF6-A8F8-2FDDB280F279}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StudentManagementApi.IntegrationTests", "StudentManagementApi.IntegrationTests\StudentManagementApi.IntegrationTests.csproj", "{BCB22232-2DA8-4EF6-A8F8-2FDDB280F279}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

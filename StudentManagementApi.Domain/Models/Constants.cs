@@ -1,4 +1,4 @@
-﻿namespace StudentManagementApi
+﻿namespace StudentManagementApi.Domain.Models
 {
     public class AppEnvironment
     {
