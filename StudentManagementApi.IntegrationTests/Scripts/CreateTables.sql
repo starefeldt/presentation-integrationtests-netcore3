@@ -1,9 +1,9 @@
 ﻿IF NOT EXISTS (SELECT * 
                  FROM INFORMATION_SCHEMA.TABLES 
-                 WHERE TABLE_SCHEMA = 'TheSchema' 
-                 AND  TABLE_NAME = 'Students')
+                 WHERE TABLE_SCHEMA = 'dbo' 
+                 AND  TABLE_NAME = 'Student')
     BEGIN
-        CREATE TABLE [Students] (
+        CREATE TABLE [Student] (
             [Id] int NOT NULL IDENTITY,
             [FirstName] nvarchar(max) NULL,
             [LastName] nvarchar(max) NULL,

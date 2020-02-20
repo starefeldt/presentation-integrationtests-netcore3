@@ -7,5 +7,9 @@ namespace StudentManagementApi.Domain.Interfaces
         IDbConnection OpenConnection();
         bool CanOpenConnection();
         void CloseConnection();
+        void SetDatabase(string databaseName);
+        void RemoveDatabase(string databaseName);
+        IDbTransaction BeginTransaction();
+        IDbTransaction GetTransaction();
     }
 }

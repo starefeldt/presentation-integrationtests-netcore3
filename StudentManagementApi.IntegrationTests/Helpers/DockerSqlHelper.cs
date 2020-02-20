@@ -1,4 +1,5 @@
-﻿using StudentManagementApi.Domain.Interfaces;
+﻿using StudentManagementApi.Domain.Configuration;
+using StudentManagementApi.Domain.Interfaces;
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -9,16 +10,9 @@ using System.Threading;
 
 namespace StudentManagementApi.IntegrationTests.Helpers
 {
-    public class DockerConfiguration
-    {
-        public string ContainerName { get; set; }
-        public int Port { get; set; }
-    }
-
     //Needed Microsoft.Powershell.SDK 6.2.4 -> 2020-02-16
     public class DockerSqlHelper
     {
-        private const string Password = "SA_PASSWORD=";
         private const string Image = "microsoft/mssql-server-windows-express";
         
         public IDbConnectionFactory DbConnectionFactory { get; }
@@ -36,7 +30,7 @@ namespace StudentManagementApi.IntegrationTests.Helpers
                 .Append("docker run ")
                 .Append("-d ")
                 .Append("-e \"ACCEPT_EULA=Y\" ")
-                .Append($"-e \"{Password}\" ")
+                .Append($"-e \"SA_PASSWORD={Configuration.SaPassword}\" ")
                 .Append($"-p {Configuration.Port}:1433 ")
                 .Append($"--name {Configuration.ContainerName} ")
                 .Append(Image)
@@ -61,7 +55,7 @@ namespace StudentManagementApi.IntegrationTests.Helpers
 
         private void TestDbConnection()
         {
-            WriteDebugMessage("Testing dbConnection");
+            WriteDebugMessage("Testing dbConnection...");
             int retryCount = 0;
             int maxAttempts = 20;
 

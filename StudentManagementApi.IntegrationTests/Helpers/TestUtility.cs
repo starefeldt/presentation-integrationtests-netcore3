@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using StudentManagementApi.Domain.Interfaces;
+using StudentManagementApi.IntegrationTests.Repositories;
 using System.Net.Http;
 using System.Text;
 
@@ -7,6 +8,14 @@ namespace StudentManagementApi.IntegrationTests.Helpers
 {
     public static class TestUtility
     {
+        public static IDbTestRepository GetCleanTestRepository(IServiceScope scope)
+        {
+            var testRepo = scope.ServiceProvider.GetRequiredService<IDbTestRepository>();
+            testRepo.DropTables();
+            testRepo.CreateTables();
+            return testRepo;
+        }
+
         public static HttpRequestMessage GetRequestMessage(
             string json, string uri, HttpMethod httpMethod)
         {

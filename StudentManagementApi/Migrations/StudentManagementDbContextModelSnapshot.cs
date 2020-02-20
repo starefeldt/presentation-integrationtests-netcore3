@@ -40,7 +40,7 @@ namespace StudentManagementApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Students");
+                    b.ToTable("Student");
                 });
 #pragma warning restore 612, 618
         }

@@ -10,7 +10,6 @@ namespace StudentManagementApi.DataAccess
     public class StudentRepositorySQL : IStudentRepository
     {
         private readonly IDbConnectionFactory _connectionFactory;
-        private IDbTransaction _transaction;
 
         public StudentRepositorySQL(IDbConnectionFactory connectionFactory)
         {
@@ -24,7 +23,7 @@ namespace StudentManagementApi.DataAccess
                             , LastName
                             , SocialSecurityNumber
                             , Created
-                        FROM Students
+                        FROM Student
                         WHERE SocialSecurityNumber = @SocialSecurityNumber";
 
             using (var conn = _connectionFactory.OpenConnection())
@@ -37,7 +36,7 @@ namespace StudentManagementApi.DataAccess
         {
             try
             {
-                var query = @"INSERT INTO Students
+                var query = @"INSERT INTO Student
                             ( FirstName
                             , LastName
                             , SocialSecurityNumber
@@ -50,7 +49,7 @@ namespace StudentManagementApi.DataAccess
                             , @Created)";
 
                 var conn = _connectionFactory.OpenConnection();
-                _transaction = conn.BeginTransaction();
+                var transaction = _connectionFactory.BeginTransaction();
 
                 student.Id = await conn.ExecuteScalarAsync<int>(query, new
                 {
@@ -59,7 +58,7 @@ namespace StudentManagementApi.DataAccess
                     student.SocialSecurityNumber,
                     student.Created
                 },
-                _transaction);
+                transaction);
             }
             catch (Exception)
             {
@@ -70,9 +69,10 @@ namespace StudentManagementApi.DataAccess
 
         public async Task SaveChangesAsync()
         {
-            _transaction.Commit();
-            await Task.CompletedTask;
+            var transaction = _connectionFactory.GetTransaction();
+            transaction.Commit();
             _connectionFactory.CloseConnection();
+            await Task.CompletedTask;
         }
     }
 }

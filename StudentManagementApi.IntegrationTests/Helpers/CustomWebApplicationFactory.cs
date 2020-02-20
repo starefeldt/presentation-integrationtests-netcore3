@@ -6,10 +6,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using StudentManagementApi.DataAccess;
+using StudentManagementApi.Domain.Configuration;
 using StudentManagementApi.Domain.Interfaces;
 using StudentManagementApi.Domain.Models;
 using StudentManagementApi.IntegrationTests.Repositories;
 using System;
+using System.Diagnostics;
 using System.Linq;
 
 namespace StudentManagementApi.IntegrationTests.Helpers
@@ -48,9 +50,9 @@ namespace StudentManagementApi.IntegrationTests.Helpers
                 {
                     var scopedServices = scope.ServiceProvider;
                     var testRepo = scopedServices.GetRequiredService<IDbTestRepository>();
-                    _dockerHelper.WriteDebugMessage("Creating database...");
+                    Debug.WriteLine("Creating database...");
                     testRepo.CreateDatabase();
-                    _dockerHelper.WriteDebugMessage("Database created");
+                    Debug.WriteLine("Database created");
                 }
 
                 services.RemoveDescriptorFor<IMessageSender>();
@@ -78,13 +80,15 @@ namespace StudentManagementApi.IntegrationTests.Helpers
                 if (_dockerHelper == null)
                 {
                     var containerName = GetUniqueContainerName();
+                    var port = PortDistributor.GetPortFor(containerName);
                     var config = new DockerConfiguration
                     {
                         ContainerName = containerName,
-                        Port = PortDistributor.GetPortFor(containerName)
+                        Port = port,
+                        SaPassword = GetSaPassword(services)
                     };
 
-                    var dbConnectionFactory = GetDbConnectionFactory(services, config.Port);
+                    var dbConnectionFactory = GetDbConnectionFactory(services, port);
                     _dockerHelper = new DockerSqlHelper(config, dbConnectionFactory);
                     _dockerHelper.StartContainer();
                 }
@@ -111,6 +115,17 @@ namespace StudentManagementApi.IntegrationTests.Helpers
             .Replace("-", "")
             .Substring(0, 8);
 
+        private string GetSaPassword(IServiceCollection services)
+        {
+            var serviceProvider = services.BuildServiceProvider();
+            using (var scope = serviceProvider.CreateScope())
+            {
+                var scopedServices = scope.ServiceProvider;
+                var configuration = scopedServices.GetRequiredService<IConfiguration>();
+                return configuration.GetSection("SqlCredentials:SaPassword").Value;
+            }
+        }
+
         private DbConnectionFactory GetDbConnectionFactory(IServiceCollection services, int port)
         {
             var serviceProvider = services.BuildServiceProvider();
@@ -119,6 +134,7 @@ namespace StudentManagementApi.IntegrationTests.Helpers
                 var scopedServices = scope.ServiceProvider;
                 var configuration = scopedServices.GetRequiredService<IConfiguration>();
                 var connectionString = configuration.GetConnectionString("IntegrationTestingDb");
+
                 connectionString = connectionString.Replace("[port]", port.ToString());
                 return new DbConnectionFactory(connectionString);
             }

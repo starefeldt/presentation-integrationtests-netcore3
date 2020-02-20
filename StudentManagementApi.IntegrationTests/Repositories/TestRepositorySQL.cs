@@ -1,42 +1,78 @@
 ﻿using Dapper;
 using StudentManagementApi.Domain.Interfaces;
-using System;
+using StudentManagementApi.Domain.Models;
+using System.Collections.Generic;
 using System.IO;
 
 namespace StudentManagementApi.IntegrationTests.Repositories
 {
     public class TestRepositorySQL : IDbTestRepository
     {
-        private readonly IDbConnectionFactory _dbConnectionFactory;
+        private readonly IDbConnectionFactory _connectionFactory;
+        private const string DatabaseName = "StudentManagementApi";
 
-        public TestRepositorySQL(IDbConnectionFactory dbConnectionFactory)
+        public TestRepositorySQL(IDbConnectionFactory connectionFactory)
         {
-            _dbConnectionFactory = dbConnectionFactory;
+            _connectionFactory = connectionFactory;
+        }
+
+
+        public Student GetStudentById(int id)
+        {
+            CloseConnectionWhenInTransaction();
+
+            var query = @"SELECT Id
+                            , FirstName
+                            , LastName
+                            , SocialSecurityNumber
+                            , Created
+                        FROM Student
+                        WHERE Id = @id";
+
+            using var conn = _connectionFactory.OpenConnection();
+            return conn.QuerySingleOrDefault<Student>(query, new { id });
+        }
+
+        private void CloseConnectionWhenInTransaction()
+        {
+            if (_connectionFactory.GetTransaction() != null)
+            {
+                _connectionFactory.CloseConnection();
+            }
+        }
+
+        public IEnumerable<Student> GetStudents()
+        {
+            CloseConnectionWhenInTransaction();
+
+            var query = @"SELECT Id
+                            , FirstName
+                            , LastName
+                            , SocialSecurityNumber
+                            , Created
+                        FROM Student";
+
+            using var conn = _connectionFactory.OpenConnection();
+            return conn.Query<Student>(query);
         }
 
         public void CreateDatabase()
         {
             var sql = GetSqlScript("CreateDatabase");
             ExecuteSql(sql);
+            _connectionFactory.SetDatabase(DatabaseName);
         }
 
         public void DropDatabase()
         {
             var sql = GetSqlScript("DropDatabase");
             ExecuteSql(sql);
+            _connectionFactory.RemoveDatabase(DatabaseName);
         }
 
-        public void CreateTables()
-        {
-            var sql = GetSqlScript("CreateTables");
-            ExecuteSql(sql);
-        }
+        public void CreateTables() => ExecuteSql(GetSqlScript("CreateTables"));
 
-        public void DropTables()
-        {
-            var sql = GetSqlScript("DropTables");
-            ExecuteSql(sql);
-        }
+        public void DropTables() => ExecuteSql(GetSqlScript("DropTables"));
 
         private string GetSqlScript(string fileName)
         {
@@ -47,8 +83,10 @@ namespace StudentManagementApi.IntegrationTests.Repositories
 
         private void ExecuteSql(string sql)
         {
-            using var conn = _dbConnectionFactory.OpenConnection();
+            using var conn = _connectionFactory.OpenConnection();
             conn.Execute(sql);
         }
+
+        
     }
 }

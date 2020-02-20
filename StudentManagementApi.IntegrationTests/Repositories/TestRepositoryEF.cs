@@ -1,5 +1,7 @@
 ﻿using StudentManagementApi.DataAccess;
+using StudentManagementApi.Domain.Models;
 using System;
+using System.Collections.Generic;
 
 namespace StudentManagementApi.IntegrationTests.Repositories
 {
@@ -17,24 +19,13 @@ namespace StudentManagementApi.IntegrationTests.Repositories
             _dbContext = dbContext;
         }
 
-        public void CreateDatabase()
-        {
-            _dbContext.Database.EnsureDeleted();
-        }
 
-        public void DropDatabase()
-        {
-            _dbContext.Database.EnsureDeleted();
-        }
+        public Student GetStudentById(int id) => _dbContext.Students.Find(id);
+        public IEnumerable<Student> GetStudents() => _dbContext.Students;
 
-        public void CreateTables()
-        {
-            _dbContext.Database.EnsureDeleted();
-        }
-
-        public void DropTables()
-        {
-            _dbContext.Database.EnsureDeleted();
-        }
+        public void CreateDatabase() => _dbContext.Database.EnsureDeleted();
+        public void DropDatabase() => _dbContext.Database.EnsureDeleted();
+        public void CreateTables() => _dbContext.Database.EnsureDeleted();
+        public void DropTables() => _dbContext.Database.EnsureDeleted();
     }
 }

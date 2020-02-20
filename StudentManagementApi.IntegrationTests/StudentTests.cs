@@ -4,7 +4,6 @@ using Newtonsoft.Json;
 using StudentManagementApi.Domain.Interfaces;
 using StudentManagementApi.Domain.Models;
 using StudentManagementApi.IntegrationTests.Helpers;
-using StudentManagementApi.IntegrationTests.Repositories;
 using System;
 using System.Net;
 using System.Net.Http;
@@ -36,41 +35,31 @@ namespace StudentManagementApi.IntegrationTests
         public async Task RegisterStudent_WhenMissingSocialSecurityNumber_Returns400()
         {
             //Arrange
-            using (var scope = _factory.Services.CreateScope())
+            var json = @"
             {
-                GetCleanTestRepository(scope);
+                ""FirstName"":""Peter"",
+                ""LastName"":""Testsson"",
+                ""SocialSecurityNumber"":""""
+            }";
 
-                var json = @"
-                    {
-                        ""FirstName"":""Peter"",
-                        ""LastName"":""Testsson"",
-                        ""SocialSecurityNumber"":""""
-                    }";
+            var request = TestUtility.GetRequestMessage(json, "/api/student", HttpMethod.Post);
 
-                var request = TestUtility.GetRequestMessage(json, "/api/student", HttpMethod.Post);
+            //Act
+            var response = await _httpClient.SendAsync(request);
 
-                //Act
-                var response = await _httpClient.SendAsync(request);
-
-                //Assert
-                Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-                var responseString = await response.Content.ReadAsStringAsync();
-                Assert.Contains("SocialSecurityNumber", responseString);
-            }
-        }
-
-        private IDbTestRepository GetCleanTestRepository(IServiceScope scope)
-        {
-            var testRepo = scope.ServiceProvider.GetRequiredService<IDbTestRepository>();
-            testRepo.DropTables();
-            testRepo.CreateTables();
-            return testRepo;
+            //Assert
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            var responseString = await response.Content.ReadAsStringAsync();
+            Assert.Contains("SocialSecurityNumber", responseString);
         }
 
         [Fact]
         public async Task RegisterStudent_WhenValidData_Returns201()
         {
             //Arrange
+            using var scope = _factory.Services.CreateScope();
+            TestUtility.GetCleanTestRepository(scope);
+
             var json = JsonConvert.SerializeObject(new StudentToRegister
             {
                 FirstName = "Peter",
@@ -86,61 +75,60 @@ namespace StudentManagementApi.IntegrationTests
             Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         }
 
-        //[Fact]
-        //public async Task RegisterStudent_WhenValidData_SavesToDb()
-        //{
-        //    //Arrange
-        //    using var scope = _factory.Services.CreateScope();
-        //    var context = TestUtility.GetCleanDbContext(scope);
+        [Fact]
+        public async Task RegisterStudent_WhenValidData_SavesToDb()
+        {
+            //Arrange
+            using var scope = _factory.Services.CreateScope();
+            var testRepo = TestUtility.GetCleanTestRepository(scope);
 
-        //    var studentToRegister = new StudentToRegister
-        //    {
-        //        FirstName = "Peter",
-        //        LastName = "Testsson",
-        //        SocialSecurityNumber = "19010101-1234"
-        //    };
-        //    var json = JsonConvert.SerializeObject(studentToRegister);
-        //    var request = TestUtility.GetRequestMessage(json, "/api/student", HttpMethod.Post);
+            var studentToRegister = new StudentToRegister
+            {
+                FirstName = "Peter",
+                LastName = "Testsson",
+                SocialSecurityNumber = "19010101-1234"
+            };
+            var json = JsonConvert.SerializeObject(studentToRegister);
+            var request = TestUtility.GetRequestMessage(json, "/api/student", HttpMethod.Post);
 
-        //    //Act
-        //    await _client.SendAsync(request);
+            //Act
+            await _httpClient.SendAsync(request);
 
-        //    //Assert
-        //    var student = context.Students.Single();
-        //    Assert.Equal(1, student.Id);
-        //    Assert.Equal(studentToRegister.FirstName, student.FirstName);
-        //    Assert.Equal(studentToRegister.LastName, student.LastName);
-        //    Assert.Equal(studentToRegister.SocialSecurityNumber, student.SocialSecurityNumber);
-        //}
+            //Assert
+            var student = testRepo.GetStudentById(1);
+            Assert.Equal(studentToRegister.FirstName, student.FirstName);
+            Assert.Equal(studentToRegister.LastName, student.LastName);
+            Assert.Equal(studentToRegister.SocialSecurityNumber, student.SocialSecurityNumber);
+        }
 
-        //[Fact]
-        //public async Task RegisterStudent_WhenFailedSend_DoesNotSaveToDb()
-        //{
-        //    //Arrange
-        //    var localClient = _factory.WithWebHostBuilder(builder =>
-        //    {
-        //        builder.ConfigureTestServices(services =>
-        //        {
-        //            var fakeSender = new FakeMessageSender(shouldSend: false);
-        //            services.AddScoped<IMessageSender>(sp => fakeSender);
-        //        });
-        //    }).CreateClient();
+        [Fact]
+        public async Task RegisterStudent_WhenFailedSend_DoesNotSaveToDb()
+        {
+            //Arrange
+            var localClient = _factory.WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureTestServices(services =>
+                {
+                    var fakeSender = new FakeMessageSender(shouldSend: false);
+                    services.AddScoped<IMessageSender>(sp => fakeSender);
+                });
+            }).CreateClient();
 
-        //    using var scope = _factory.Services.CreateScope();
-        //    var context = TestUtility.GetCleanDbContext(scope);
+            using var scope = _factory.Services.CreateScope();
+            var testRepo = TestUtility.GetCleanTestRepository(scope);
 
-        //    var studentToRegister = new StudentToRegister
-        //    {
-        //        FirstName = "Peter",
-        //        LastName = "Testsson",
-        //        SocialSecurityNumber = "19010101-1234"
-        //    };
-        //    var json = JsonConvert.SerializeObject(studentToRegister);
-        //    var request = TestUtility.GetRequestMessage(json, "/api/student", HttpMethod.Post);
+            var studentToRegister = new StudentToRegister
+            {
+                FirstName = "Peter",
+                LastName = "Testsson",
+                SocialSecurityNumber = "19010101-1234"
+            };
+            var json = JsonConvert.SerializeObject(studentToRegister);
+            var request = TestUtility.GetRequestMessage(json, "/api/student", HttpMethod.Post);
 
-        //    //Act & Assert
-        //    await Assert.ThrowsAsync<InvalidOperationException>(() => localClient.SendAsync(request));
-        //    Assert.Empty(context.Students);
-        //}
+            //Act & Assert
+            await Assert.ThrowsAsync<InvalidOperationException>(() => localClient.SendAsync(request));
+            Assert.Empty(testRepo.GetStudents());
+        }
     }
 }
