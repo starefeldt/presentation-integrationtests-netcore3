@@ -57,7 +57,7 @@ namespace StudentManagementApi.IntegrationTests.Helpers
         {
             WriteDebugMessage("Testing dbConnection...");
             int retryCount = 0;
-            int maxAttempts = 20;
+            int maxAttempts = 10;
 
             while (retryCount != maxAttempts)
             {

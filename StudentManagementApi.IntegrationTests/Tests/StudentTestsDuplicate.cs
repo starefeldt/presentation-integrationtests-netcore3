@@ -10,8 +10,11 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace StudentManagementApi.IntegrationTests
+namespace StudentManagementApi.IntegrationTests.Tests
 {
+    /// <summary>
+    /// In use just to make sure that Docker can handle simultaneous test classes
+    /// </summary>
     public class StudentTestsDuplicate : IClassFixture<CustomWebApplicationFactory<Startup>>
     {
         private readonly CustomWebApplicationFactory<Startup> _factory;

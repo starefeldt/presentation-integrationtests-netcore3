@@ -6,7 +6,7 @@ using Microsoft.Extensions.Hosting;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace StudentManagementApi.IntegrationTests
+namespace StudentManagementApi.IntegrationTests.Tests
 {
     public class TestServerTests
     {
@@ -36,13 +36,13 @@ namespace StudentManagementApi.IntegrationTests
             var hostBuilder = new HostBuilder()
                 .ConfigureWebHost(webHost =>
                 {
-                    //Använd denna metod istället för new TestServer(...)
+                    //Compare with previous that uses new TestServer(...)
                     webHost.UseTestServer();
                     webHost.Configure(app => app.Run(async ctx =>
                         await ctx.Response.WriteAsync("Hello World!")));
                 });
 
-            //Använd denna metod istället för CreateClient()
+            //Compare with previous that uses CreateClient()
             var host = await hostBuilder.StartAsync();
             var client = host.GetTestClient();
 

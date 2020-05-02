@@ -4,20 +4,19 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using StudentManagementApi.DataAccess;
 using StudentManagementApi.Domain.Configuration;
 using StudentManagementApi.Domain.Interfaces;
 using StudentManagementApi.Domain.Models;
+using StudentManagementApi.IntegrationTests.Helpers;
 using StudentManagementApi.IntegrationTests.Repositories;
 using System;
 using System.Diagnostics;
 using System.Linq;
 
-namespace StudentManagementApi.IntegrationTests.Helpers
+namespace StudentManagementApi.IntegrationTests
 {
-    public class CustomWebApplicationFactory<TStartup>
-        : WebApplicationFactory<TStartup>
+    public class CustomWebApplicationFactory<TStartup> : WebApplicationFactory<TStartup>
         where TStartup : class
     {
         private DockerSqlHelper _dockerHelper;
@@ -28,8 +27,6 @@ namespace StudentManagementApi.IntegrationTests.Helpers
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
-            // Always use IServiceScope to resolve instances when getting services from the
-            // IOC-container (memory-leeks may occur otherwise).
             builder.ConfigureServices(services =>
             {
                 if (services.HasRegistered<IStudentRepository, StudentRepositoryEF>())
@@ -45,6 +42,8 @@ namespace StudentManagementApi.IntegrationTests.Helpers
                     throw new InvalidOperationException($"Missing registration in {nameof(IServiceCollection)} for: {nameof(IStudentRepository)}");
                 }
 
+                // Always use IServiceScope to resolve instances when getting services from the
+                // IOC-container (memory-leeks may occur otherwise).
                 var serviceProvider = services.BuildServiceProvider();
                 using (var scope = serviceProvider.CreateScope())
                 {
@@ -66,8 +65,8 @@ namespace StudentManagementApi.IntegrationTests.Helpers
                 options.UseInMemoryDatabase("InMemoryDbForTesting");
             });
             // Seed database with data here or let each test handle it.
-            // The actual http-request scoped instance of DbContext can't be obtained from the test.
-            // However, will work with a new DbContext since it uses the same DbContextOptions.
+            // The actual http-request scoped instance of DbContext can't be obtained from within the test.
+            // However, it will work with a new DbContext since it uses the same DbContextOptions.
             services.AddScoped<IDbTestRepository, TestRepositoryEF>();
         }
 
@@ -97,14 +96,8 @@ namespace StudentManagementApi.IntegrationTests.Helpers
             }
             catch (Exception ex)
             {
-                var serviceProvider = services.BuildServiceProvider();
-                using (var scope = serviceProvider.CreateScope())
-                {
-                    var scopedServices = scope.ServiceProvider;
-                    var logger = scopedServices.GetRequiredService<ILogger<CustomWebApplicationFactory<TStartup>>>();
-                    logger.LogError(ex.ToString());
-                    throw;
-                }
+                Debug.WriteLine(ex.Message);
+                throw;
             }
         }
 

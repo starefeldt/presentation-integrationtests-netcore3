@@ -10,7 +10,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace StudentManagementApi.IntegrationTests
+namespace StudentManagementApi.IntegrationTests.Tests
 {
     public class StudentTests : IClassFixture<CustomWebApplicationFactory<Startup>>
     {
